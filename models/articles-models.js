@@ -11,4 +11,23 @@ function selectArticleById(id) {
     })
 }
 
-module.exports = selectArticleById;
+function selectArticles() {
+    return db
+    .query(
+        `SELECT articles.author, articles.title, articles.article_id, articles.topic, 
+        articles.created_at, articles.votes, articles.article_img_url, 
+        CAST(COALESCE(comment_count_table.comment_count, 0) AS INT) AS comment_count
+        FROM articles
+        LEFT JOIN 
+            (SELECT article_id, COUNT(article_id) AS comment_count 
+            FROM comments
+            GROUP BY article_id) AS comment_count_table
+        ON articles.article_id = comment_count_table.article_id
+        ORDER BY created_at DESC`
+    )
+    .then(({rows}) => {
+        return rows;
+    })
+}
+
+module.exports = {selectArticles, selectArticleById};
