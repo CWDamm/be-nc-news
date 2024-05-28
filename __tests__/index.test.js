@@ -3,17 +3,30 @@ const request = require('supertest');
 const db = require('../db/connection');
 const seed = require('../db/seeds/seed');
 const { topicData, userData, articleData, commentData } = require('../db/data/test-data/index');
+const endpoints = require("../endpoints.json");
 
 beforeEach(() => seed({ topicData, userData, articleData, commentData }))
 afterAll(() => db.end())
 
-describe('GET /api/topics', () => {
+describe('invalid route', () => {
     test('returns appropriate error message when given a bad route - status 404', () => {
         return request(app)
             .get('/api/bananas')
             .expect(404)
             .then(({ body }) => {
                 expect(body.msg).toBe("Route not found")
+            })
+    })
+})
+
+describe('/api', () => {
+    test('returns a description of all other available endpoints as JSON - status 200', () => {
+        return request(app)
+            .get('/api')
+            .expect(200)
+            .then(({ body }) => {
+                expect(Object.keys(body.endpoints).length).toBe(2)
+                expect(body.endpoints).toEqual(endpoints);
             })
     })
 })
