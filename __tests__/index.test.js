@@ -95,7 +95,6 @@ describe('GET /api/articles/:article_id', () => {
                 .then(({ body }) => {
                     expect(body.articles.length).toBe(13)
                     body.articles.forEach((article) => {
-                        console.log(article);
                         expect(article).toMatchObject({
                             author: expect.any(String),
                             title: expect.any(String),
@@ -115,7 +114,6 @@ describe('GET /api/articles/:article_id', () => {
                 .get('/api/articles')
                 .expect(200)
                 .then(({ body }) => {
-                    console.log(body.articles[0].comment_count);
                     expect(body.articles.find(article => article.article_id === 1).comment_count).toBe(11)
                     expect(body.articles.find(article => article.article_id === 2).comment_count).toBe(0)
                 })
