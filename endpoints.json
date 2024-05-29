@@ -57,6 +57,23 @@
           }
         ]
       }
+    },
+
+    "POST /api/api/articles/:article_id/comments": {
+      "description": "posts a new comment and serves an object with the posted comment",
+      "queries": [],
+      "exampleResponse": {
+        "articles": [
+          {
+              "comment_id": 19,
+              "body": "Uneblievable stuff Geoff!",
+              "article_id": 9,
+              "author": "icellusedkars",
+              "votes": 0,
+              "created_at": "2024-05-29T11:21:44.857Z"
+          }
+        ]
+      }
     }
 
 

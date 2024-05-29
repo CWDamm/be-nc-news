@@ -20,7 +20,7 @@ describe('invalid route', () => {
 })
 
 describe('/api', () => {
-    test('returns a description of all other available endpoints as JSON - status 200', () => {
+    test('GETS a description of all other available endpoints as JSON - status 200', () => {
         return request(app)
             .get('/api')
             .expect(200)
@@ -32,7 +32,7 @@ describe('/api', () => {
 })
 
 describe('GET /api/topics', () => {
-    test('sends an array of all topics to the client - status 200', () => {
+    test('GETS an array of all topics - status 200', () => {
         return request(app)
             .get('/api/topics')
             .expect(200)
@@ -49,7 +49,7 @@ describe('GET /api/topics', () => {
 })
 
 describe('GET /api/articles/:article_id', () => {
-    test('sends an array of all topics to the client - status 200', () => {
+    test('GETS an array of all topics - status 200', () => {
         return request(app)
             .get('/api/articles/1')
             .expect(200)
@@ -85,90 +85,90 @@ describe('GET /api/articles/:article_id', () => {
                 expect(response.body.msg).toBe('Bad request');
             });
     });
+})
 
-    describe('GET /api/articles', () => {
-        test('sends an array of all articles to the client - status 200', () => {
-            return request(app)
-                .get('/api/articles')
-                .expect(200)
-                .then(({ body }) => {
-                    expect(body.articles.length).toBe(13)
-                    body.articles.forEach((article) => {
-                        expect(article).toMatchObject({
-                            author: expect.any(String),
-                            title: expect.any(String),
-                            article_id: expect.any(Number),
-                            topic: expect.any(String),
-                            created_at: expect.any(String),
-                            votes: expect.any(Number),
-                            article_img_url: expect.any(String),
-                            comment_count: expect.any(Number)
-                        })
+describe('GET /api/articles', () => {
+    test('GETS an array of all articles - status 200', () => {
+        return request(app)
+            .get('/api/articles')
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.articles.length).toBe(13)
+                body.articles.forEach((article) => {
+                    expect(article).toMatchObject({
+                        author: expect.any(String),
+                        title: expect.any(String),
+                        article_id: expect.any(Number),
+                        topic: expect.any(String),
+                        created_at: expect.any(String),
+                        votes: expect.any(Number),
+                        article_img_url: expect.any(String),
+                        comment_count: expect.any(Number)
                     })
                 })
-        })
-
-        test('articles have correct comment count', () => {
-            return request(app)
-                .get('/api/articles')
-                .expect(200)
-                .then(({ body }) => {
-                    expect(body.articles.find(article => article.article_id === 1).comment_count).toBe(11)
-                    expect(body.articles.find(article => article.article_id === 2).comment_count).toBe(0)
-                })
-        })
-
-        test('articles sorted by date in descending order', () => {
-            return request(app)
-                .get('/api/articles')
-                .expect(200)
-                .then(({ body }) => {
-                    expect(body.articles.length).toBe(13)
-                    expect(body.articles).toBeSortedBy('created_at', { descending: true });
-                })
-        })
-
-        test('no body property on the articles', () => {
-            return request(app)
-                .get('/api/articles')
-                .expect(200)
-                .then(({ body }) => {
-                    body.articles.forEach(article => {
-                        expect(article.body).toBeUndefined();
-                    })
-                })
-        })
+            })
     })
 
-    describe('/api/articles/:article_id/comments', () => {
-        test('sends an array of all comments associated with an article id - status 200', () => {
-            return request(app)
-                .get('/api/articles/1/comments')
-                .expect(200)
-                .then(({ body }) => {
-                    expect(body.comments.length).toBe(11)
-                    body.comments.forEach((comment) => {
-                        expect(comment).toMatchObject({
-                            comment_id: expect.any(Number),
-                            votes: expect.any(Number),
-                            created_at: expect.any(String),
-                            author: expect.any(String),
-                            body: expect.any(String),
-                            article_id: expect.any(Number)
-                        })
+    test('articles have correct comment count', () => {
+        return request(app)
+            .get('/api/articles')
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.articles.find(article => article.article_id === 1).comment_count).toBe(11)
+                expect(body.articles.find(article => article.article_id === 2).comment_count).toBe(0)
+            })
+    })
+
+    test('articles sorted by date in descending order', () => {
+        return request(app)
+            .get('/api/articles')
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.articles.length).toBe(13)
+                expect(body.articles).toBeSortedBy('created_at', { descending: true });
+            })
+    })
+
+    test('no body property on the articles', () => {
+        return request(app)
+            .get('/api/articles')
+            .expect(200)
+            .then(({ body }) => {
+                body.articles.forEach(article => {
+                    expect(article.body).toBeUndefined();
+                })
+            })
+    })
+})
+
+describe('/api/articles/:article_id/comments', () => {
+    test('GETS an array of all comments associated with an article id - status 200', () => {
+        return request(app)
+            .get('/api/articles/1/comments')
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.comments.length).toBe(11)
+                body.comments.forEach((comment) => {
+                    expect(comment).toMatchObject({
+                        comment_id: expect.any(Number),
+                        votes: expect.any(Number),
+                        created_at: expect.any(String),
+                        author: expect.any(String),
+                        body: expect.any(String),
+                        article_id: expect.any(Number)
                     })
                 })
-        })
+            })
+    })
 
-        test('comments sorted by descending order of creation date', () => {
-            return request(app)
-                .get('/api/articles/1/comments')
-                .expect(200)
-                .then(({ body }) => {
-                    expect(body.comments.length).toBe(11)
-                    expect(body.comments).toBeSortedBy('created_at', { descending: true });
-                })
-        })
+    test('comments sorted by descending order of creation date', () => {
+        return request(app)
+            .get('/api/articles/1/comments')
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.comments.length).toBe(11)
+                expect(body.comments).toBeSortedBy('created_at', { descending: true });
+            })
     })
 
     test('responds with error message if article id does not exist', () => {
@@ -191,4 +191,70 @@ describe('GET /api/articles/:article_id', () => {
             })
     })
 })
+
+describe('/api/articles/:article_id/comments', () => {
+    test('POSTS a new comment to an article with article id - status 201', () => {
+
+        const newComment = {
+            username: 'icellusedkars',
+            body: 'Uneblievable stuff Geoff!'
+        }
+
+        const returnedComment = {
+            author: 'icellusedkars',
+            body: 'Uneblievable stuff Geoff!',
+            article_id: 9,
+            votes: 0
+        }
+
+        return request(app)
+            .post('/api/articles/9/comments')
+            .send(newComment)
+            .expect(201)
+            .then(({ body }) => {
+                console.log(body.newComment);
+                expect(body.newComment).toMatchObject(returnedComment)
+            })
+    });
+
+    test('responds with error message if article id is valid but does not exist', () => {
+
+         return request(app)
+            .get('/api/articles/999999/comments')
+            .expect(404)
+            .then(({ body }) => {
+                const { msg } = body;
+                expect(msg).toBe("no article found with matching id");
+            })
+    });
+
+    test('sends an appropriate status and error message when given an invalid id', () => {
+        return request(app)
+        .get('/api/articles/not-an-article/comments')
+        .expect(400)
+            .then((response) => {
+                expect(response.body.msg).toBe('Bad request');
+            });
+    });
+
+    test('returns error message when username does not exist - status 404', () => {
+
+        const newComment = {
+            username: 'spot_the_dog',
+            body: 'Uneblievable stuff Geoff!'
+        }
+
+        return request(app)
+            .post('/api/articles/9/comments')
+            .send(newComment)
+            .expect(404)
+            .then(({ body }) => {
+                const { msg } = body;
+                expect(msg).toBe("username not found");
+            })
+    });
+
+ })
+
+
 
