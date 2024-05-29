@@ -394,6 +394,32 @@ describe('PATCH /api/articles/:article_id', () => {
 
 })
 
+describe("delete a given comment by comment id", () => {
+    test("DELETE /api/comments/:comment_id", () => {
+        return request(app)
+        .delete("/api/comments/1")
+        .expect(204)
+    })
+
+    test('DELETE:404 responds with an appropriate status and error message when given a valid but non-existent id', () => {
+        return request(app)
+        .delete("/api/comments/999999")
+        .expect(404)
+        .then(response => {
+            expect(response.body.msg).toBe("Comment not found")
+        })
+    })
+
+    test('DELETE:400 responds with an appropriate status and error message when given an invalid id', () => {
+        return request(app)
+        .delete("/api/comments/not-a-comment")
+          .expect(400)
+          .then(response => {
+            expect(response.body.msg).toBe('Bad request');
+          });
+      });
+
+})
 
 
 
