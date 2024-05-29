@@ -7,7 +7,6 @@ function selectEndpoints() {
     .then((endpoints) => {
         return JSON.parse(endpoints);
     })
-    .catch((err) => {next(err)})
 }
 
 module.exports = selectEndpoints;
