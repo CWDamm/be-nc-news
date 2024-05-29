@@ -26,7 +26,6 @@ describe('/api', () => {
             .expect(200)
             .then(({ body }) => {
                 const endpointsCount = Object.keys(endpoints).length;
-                expect(Object.keys(body.endpoints).length).toBe(endpointsCount)
                 expect(body.endpoints).toEqual(endpoints);
             })
     })
@@ -140,4 +139,56 @@ describe('GET /api/articles/:article_id', () => {
                 })
         })
     })
+
+    describe('/api/articles/:article_id/comments', () => {
+        test('sends an array of all comments associated with an article id - status 200', () => {
+            return request(app)
+                .get('/api/articles/1/comments')
+                .expect(200)
+                .then(({ body }) => {
+                    expect(body.comments.length).toBe(11)
+                    body.comments.forEach((comment) => {
+                        expect(comment).toMatchObject({
+                            comment_id: expect.any(Number),
+                            votes: expect.any(Number),
+                            created_at: expect.any(String),
+                            author: expect.any(String),
+                            body: expect.any(String),
+                            article_id: expect.any(Number)
+                        })
+                    })
+                })
+        })
+
+        test('comments sorted by descending order of creation date', () => {
+            return request(app)
+                .get('/api/articles/1/comments')
+                .expect(200)
+                .then(({ body }) => {
+                    expect(body.comments.length).toBe(11)
+                    expect(body.comments).toBeSortedBy('created_at', { descending: true });
+                })
+        })
+    })
+
+    test('responds with error message if article id does not exist', () => {
+        return request(app)
+            .get('/api/articles/999999/comments')
+            .expect(404)
+            .then(({ body }) => {
+                const { msg } = body;
+                expect(msg).toBe("no article found with matching id");
+            })
+    })
+
+    test('responds with empty array if article id has no comments', () => {
+        return request(app)
+            .get('/api/articles/2/comments')
+            .expect(200)
+            .then(({ body }) => {
+                const { comments } = body;
+                expect(comments).toEqual([]);
+            })
+    })
 })
+

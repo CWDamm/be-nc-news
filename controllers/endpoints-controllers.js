@@ -6,7 +6,7 @@ function getEndpoints(req, res, next) {
             .then((endpoints) => {
                 res.status(200).send( {endpoints} )
             })
-
+            .catch((err) => {next(err)})
 }
 
 module.exports = { getEndpoints }
