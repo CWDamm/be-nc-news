@@ -49,7 +49,7 @@ describe('GET /api/topics', () => {
 })
 
 describe('GET /api/articles/:article_id', () => {
-    test('GETS an array of all topics - status 200', () => {
+    test('GETS an array of all articles with article id - status 200', () => {
         return request(app)
             .get('/api/articles/1')
             .expect(200)
@@ -141,7 +141,7 @@ describe('GET /api/articles', () => {
     })
 })
 
-describe('/api/articles/:article_id/comments', () => {
+describe('GETS /api/articles/:article_id/comments', () => {
     test('GETS an array of all comments associated with an article id - status 200', () => {
         return request(app)
             .get('/api/articles/1/comments')
@@ -155,7 +155,7 @@ describe('/api/articles/:article_id/comments', () => {
                         created_at: expect.any(String),
                         author: expect.any(String),
                         body: expect.any(String),
-                        article_id: expect.any(Number)
+                        article_id: 1
                     })
                 })
             })
@@ -181,6 +181,15 @@ describe('/api/articles/:article_id/comments', () => {
             })
     })
 
+    test('responds with error message if article id is invalid', () => {
+        return request(app)
+            .get('/api/articles/not-an-article/comments')
+            .expect(400)
+            .then((response) => {
+                expect(response.body.msg).toBe('Bad request');
+            });
+    })
+
     test('responds with empty array if article id has no comments', () => {
         return request(app)
             .get('/api/articles/2/comments')
@@ -192,7 +201,7 @@ describe('/api/articles/:article_id/comments', () => {
     })
 })
 
-describe('/api/articles/:article_id/comments', () => {
+describe('POSTS /api/articles/:article_id/comments', () => {
     test('POSTS a new comment to an article with article id - status 201', () => {
 
         const newComment = {
@@ -212,15 +221,20 @@ describe('/api/articles/:article_id/comments', () => {
             .send(newComment)
             .expect(201)
             .then(({ body }) => {
-                console.log(body.newComment);
                 expect(body.newComment).toMatchObject(returnedComment)
             })
     });
 
     test('responds with error message if article id is valid but does not exist', () => {
 
-         return request(app)
-            .get('/api/articles/999999/comments')
+        const newComment = {
+            username: 'icellusedkars',
+            body: 'Uneblievable stuff Geoff!'
+        }
+
+        return request(app)
+            .post('/api/articles/999999/comments')
+            .send(newComment)
             .expect(404)
             .then(({ body }) => {
                 const { msg } = body;
@@ -229,9 +243,16 @@ describe('/api/articles/:article_id/comments', () => {
     });
 
     test('sends an appropriate status and error message when given an invalid id', () => {
+        
+        const newComment = {
+            username: 'icellusedkars',
+            body: 'Uneblievable stuff Geoff!'
+        }
+
         return request(app)
-        .get('/api/articles/not-an-article/comments')
-        .expect(400)
+            .post('/api/articles/not-an-id/comments')
+            .send(newComment)
+            .expect(400)
             .then((response) => {
                 expect(response.body.msg).toBe('Bad request');
             });
@@ -254,7 +275,127 @@ describe('/api/articles/:article_id/comments', () => {
             })
     });
 
- })
+    test('sends an appropriate status and error message when body field is missing', () => {
+
+        const newComment = {username: 'icellusedkars'}
+
+        return request(app)
+           .post('/api/articles/9/comments')
+            .send(newComment)
+            .expect(400)
+            .then((response) => {
+                expect(response.body.msg).toBe("missing field - body");
+            });
+    });
+
+})
+
+describe('PATCH /api/articles/:article_id', () => {
+    test('PATCHES an article with an updated votes property - status 201', () => {
+
+        const voteUpdate = { inc_votes: 5 }
+
+        const returnedArticle = {
+            article_id: 1,
+            title: 'Living in the shadow of a great man',
+            topic: 'mitch',
+            author: 'butter_bridge',
+            body: 'I find this existence challenging',
+            created_at: '2020-07-09T20:11:00.000Z',
+            votes: 105,
+            article_img_url: 'https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700'
+        }
+
+        return request(app)
+            .patch('/api/articles/1')
+            .send(voteUpdate)
+            .expect(201)
+            .then(({ body }) => {
+                expect(body.updatedArticle).toEqual(returnedArticle);
+            })
+    })
+
+    test('provides correct adjustment if votes go down', () => {
+
+        const voteUpdate = { inc_votes: -5 }
+
+        const returnedArticle = {
+            article_id: 1,
+            title: 'Living in the shadow of a great man',
+            topic: 'mitch',
+            author: 'butter_bridge',
+            body: 'I find this existence challenging',
+            created_at: '2020-07-09T20:11:00.000Z',
+            votes: 95,
+            article_img_url: 'https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700'
+        }
+
+        return request(app)
+            .patch('/api/articles/1')
+            .send(voteUpdate)
+            .expect(201)
+            .then(({ body }) => {
+                expect(body.updatedArticle).toEqual(returnedArticle);
+            })
+    })
+
+    test('responds with error message if article id is valid but does not exist', () => {
+
+        const voteUpdate = { inc_votes: 5 }
+
+        return request(app)
+            .patch('/api/articles/999999')
+            .send(voteUpdate)
+            .expect(404)
+            .then(({ body }) => {
+                const { msg } = body;
+                expect(msg).toBe("no article found with matching id");
+            })
+    });
+
+    test('sends an appropriate status and error message when given an invalid id', () => {
+
+        const voteUpdate = { inc_votes: 5 }
+
+        return request(app)
+            .patch('/api/articles/not-an-id')
+            .send(voteUpdate)
+            .expect(400)
+            .then((response) => {
+                expect(response.body.msg).toBe('Bad request');
+            });
+    });
+
+    test('sends an appropriate status and error message when given a malformed body (no increment)', () => {
+
+        const voteUpdate = {}
+
+        return request(app)
+            .patch('/api/articles/1')
+            .send(voteUpdate)
+            .expect(400)
+            .then((response) => {
+                expect(response.body.msg).toBe("no vote increment provided");
+            });
+    });
+
+    test('sends an appropriate status and error message when given an invalid vote change', () => {
+
+        const voteUpdate = { inc_votes: "not-an-increment" }
+
+        return request(app)
+            .patch('/api/articles/1')
+            .send(voteUpdate)
+            .expect(400)
+            .then((response) => {
+                expect(response.body.msg).toBe('Bad request');
+            });
+    });
+
+})
+
+
+
 
 
 

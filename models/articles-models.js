@@ -31,14 +31,14 @@ function selectArticles() {
         })
 }
 
-function checkArticleIdExists (article_id) {
+function checkArticleIdExists(article_id) {
     return db
-    .query('SELECT * FROM articles WHERE article_id = $1', [article_id])
-    .then(({rows}) => {
-        if(!rows.length) {
-            return Promise.reject({ status: 404, msg: "no article found with matching id" })
-        }
-    })
+        .query('SELECT * FROM articles WHERE article_id = $1', [article_id])
+        .then(({ rows }) => {
+            if (!rows.length) {
+                return Promise.reject({ status: 404, msg: "no article found with matching id" })
+            }
+        })
 }
 
 function selectCommentsByArticleId(article_id) {
@@ -56,24 +56,51 @@ function insertCommentByArticleId(newComment, article_id) {
     const author = newComment.username;
     const inputValues = [author, body, article_id];
 
+    if(!body) {
+        return Promise.reject({ status: 400, msg: "missing field - body" })
+    } else if(!author) {
+        console.log("passed logic!")
+        return Promise.reject({ status: 400, msg: "missing field - username" })
+    }
+
     const formattedSqlQuery = format(
         `INSERT INTO comments 
         (author, body, article_id)
         VALUES (%L) RETURNING *;`
-    , inputValues);
+        , inputValues);
 
     return db
-    .query(formattedSqlQuery)
-    .then((result)=> {
-        return result.rows[0];
-    })
+        .query(formattedSqlQuery)
+        .then((result) => {
+            return result.rows[0];
+        })
+}
+
+function updateArticleById(article_id, voteChange) {
+  
+    if(!voteChange && voteChange !== 0) {
+        return Promise.reject({ status: 400, msg: "no vote increment provided" })
+    }
+
+    const sqlQuery = `
+    UPDATE articles 
+    SET votes = votes + $2
+    WHERE article_id = $1
+    RETURNING *;`
+
+    return db
+        .query(sqlQuery, [article_id, voteChange])
+        .then(({ rows }) => {
+            return rows[0];
+        })
 }
 
 
-module.exports = { 
-    selectArticles, 
-    selectArticleById, 
-    checkArticleIdExists, 
+module.exports = {
+    selectArticles,
+    selectArticleById,
+    updateArticleById,
+    checkArticleIdExists,
     selectCommentsByArticleId,
     insertCommentByArticleId
 };

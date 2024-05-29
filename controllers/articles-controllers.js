@@ -1,6 +1,7 @@
 const {
-    selectArticleById,
     selectArticles,
+    selectArticleById,
+    updateArticleById,
     selectCommentsByArticleId,
     checkArticleIdExists,
     insertCommentByArticleId
@@ -14,7 +15,7 @@ function getArticleById(req, res, next) {
 
     selectArticleById(article_id)
         .then((article) => {
-            res.status(200).send({ article })
+            res.status(200).send( {article} )
         })
         .catch((err) => {
             next(err);
@@ -58,14 +59,13 @@ function postCommentByArticleId(req, res, next) {
 
     checkUsernameExists(newComment.username)
         .then(() => {
-            const promises = [
-                insertCommentByArticleId(newComment, article_id),
-                checkArticleIdExists(article_id)
-            ]
-            return Promise.all(promises)
+            return checkArticleIdExists(article_id)
         })
-        .then((resolvedPromises) => {
-            const newComment = resolvedPromises[0];
+        .then(() => {
+            return insertCommentByArticleId(newComment, article_id)
+        })
+        .then((result) => {
+            const newComment = result;
             res.status(201).send({ newComment })
         })
         .catch(err => {
@@ -73,4 +73,30 @@ function postCommentByArticleId(req, res, next) {
         })
 }
 
-module.exports = { getArticles, getArticleById, getCommentsByArticleId, postCommentByArticleId }
+function patchArticleById(req, res, next) {
+
+    const { article_id } = req.params;
+    const voteChange = req.body.inc_votes;
+
+    const promises = [
+        updateArticleById(article_id, voteChange),
+        checkArticleIdExists(article_id)
+    ]
+
+    Promise.all(promises)
+        .then((resolvedPromises) => {
+            const updatedArticle = resolvedPromises[0];
+            res.status(201).send( {updatedArticle} )
+        })
+        .catch((err) => {
+            next(err);
+        })
+}
+
+module.exports = {
+    getArticles,
+    getArticleById,
+    patchArticleById,
+    getCommentsByArticleId,
+    postCommentByArticleId
+}
