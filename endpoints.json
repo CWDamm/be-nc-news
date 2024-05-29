@@ -63,16 +63,27 @@
       "description": "posts a new comment and serves an object with the posted comment",
       "queries": [],
       "exampleResponse": {
-        "articles": [
-          {
               "comment_id": 19,
               "body": "Uneblievable stuff Geoff!",
               "article_id": 9,
               "author": "icellusedkars",
               "votes": 0,
               "created_at": "2024-05-29T11:21:44.857Z"
-          }
-        ]
+      }
+    },
+
+    "PATCH /api/api/articles/:article_id/comments": {
+      "description": "updates article with given id based on vote increment, serves the updated article object",
+      "queries": [],
+      "exampleResponse": {
+            "article_id": 1,
+            "title": "Living in the shadow of a great man",
+            "topic": "mitch",
+            "author": "butter_bridge",
+            "body": "I find this existence challenging",
+            "created_at": "2020-07-09T20:11:00.000Z",
+            "votes": 105,
+            "article_img_url": "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700"
       }
     }
 
