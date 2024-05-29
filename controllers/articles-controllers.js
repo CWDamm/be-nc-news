@@ -1,4 +1,12 @@
-const { selectArticleById, selectArticles, selectCommentsByArticleId, checkArticleIdExists } = require('../models/articles-models')
+const {
+    selectArticleById,
+    selectArticles,
+    selectCommentsByArticleId,
+    checkArticleIdExists,
+    insertCommentByArticleId
+} = require('../models/articles-models')
+const checkUsernameExists = require('../models/users-models')
+
 
 function getArticleById(req, res, next) {
 
@@ -28,7 +36,10 @@ function getCommentsByArticleId(req, res, next) {
 
     const { article_id } = req.params;
 
-    const promises = [selectCommentsByArticleId(article_id), checkArticleIdExists(article_id)]
+    const promises = [
+        selectCommentsByArticleId(article_id),
+        checkArticleIdExists(article_id)
+    ]
 
     Promise.all(promises)
         .then((resolvedPromises) => {
@@ -37,7 +48,29 @@ function getCommentsByArticleId(req, res, next) {
         })
         .catch(err => {
             next(err);
-        }) 
+        })
 }
 
-module.exports = { getArticles, getArticleById, getCommentsByArticleId }
+function postCommentByArticleId(req, res, next) {
+
+    const newComment = req.body;
+    const { article_id } = req.params;
+
+    checkUsernameExists(newComment.username)
+        .then(() => {
+            const promises = [
+                insertCommentByArticleId(newComment, article_id),
+                checkArticleIdExists(article_id)
+            ]
+            return Promise.all(promises)
+        })
+        .then((resolvedPromises) => {
+            const newComment = resolvedPromises[0];
+            res.status(201).send({ newComment })
+        })
+        .catch(err => {
+            next(err)
+        })
+}
+
+module.exports = { getArticles, getArticleById, getCommentsByArticleId, postCommentByArticleId }
