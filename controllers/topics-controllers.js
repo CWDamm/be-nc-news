@@ -1,4 +1,4 @@
-const selectTopics = require('../models/topic-models')
+const selectTopics = require('../models/topics-models')
 
 function getTopics(req, res, next) {
 
