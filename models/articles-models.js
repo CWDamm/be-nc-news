@@ -12,20 +12,27 @@ function selectArticleById(id) {
         })
 }
 
-function selectArticles() {
-    return db
-        .query(
-            `SELECT articles.author, articles.title, articles.article_id, articles.topic, 
+function selectArticles(topic) {
+
+    let sqlQuery = `SELECT articles.author, articles.title, articles.article_id, articles.topic, 
         articles.created_at, articles.votes, articles.article_img_url, 
         CAST(COALESCE(comment_count_table.comment_count, 0) AS INT) AS comment_count
         FROM articles
         LEFT JOIN 
-            (SELECT article_id, COUNT(article_id) AS comment_count 
-            FROM comments
-            GROUP BY article_id) AS comment_count_table
-        ON articles.article_id = comment_count_table.article_id
-        ORDER BY created_at DESC`
-        )
+        (SELECT article_id, COUNT(article_id) AS comment_count 
+        FROM comments
+        GROUP BY article_id) AS comment_count_table
+        ON articles.article_id = comment_count_table.article_id`
+    let inputValues = []
+
+    if(topic) {
+        sqlQuery += ` WHERE topic = $1`
+        inputValues.push(topic);
+    }
+    sqlQuery += ` ORDER BY created_at DESC`;
+
+    return db
+        .query(sqlQuery, inputValues)
         .then(({ rows }) => {
             return rows;
         })
@@ -56,10 +63,9 @@ function insertCommentByArticleId(newComment, article_id) {
     const author = newComment.username;
     const inputValues = [author, body, article_id];
 
-    if(!body) {
+    if (!body) {
         return Promise.reject({ status: 400, msg: "missing field - body" })
-    } else if(!author) {
-        console.log("passed logic!")
+    } else if (!author) {
         return Promise.reject({ status: 400, msg: "missing field - username" })
     }
 
@@ -77,8 +83,8 @@ function insertCommentByArticleId(newComment, article_id) {
 }
 
 function updateArticleById(article_id, voteChange) {
-  
-    if(!voteChange && voteChange !== 0) {
+
+    if (!voteChange && voteChange !== 0) {
         return Promise.reject({ status: 400, msg: "no vote increment provided" })
     }
 

@@ -139,6 +139,36 @@ describe('GET /api/articles', () => {
                 })
             })
     })
+
+    test('accepts a query to filter by topic', () => {
+        return request(app)
+            .get('/api/articles?topic=mitch')
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.articles.length).toBe(12)
+                body.articles.forEach(article => {
+                    expect(article.topic).toBe("mitch");
+                })
+            })
+    })
+
+    test('an invalid query returns 404 error and appropriate message', () => {
+        return request(app)
+            .get('/api/articles?topic=bananas')
+            .expect(404)
+            .then(({ body }) => {
+                expect(body.msg).toBe('Topic not found')
+            })
+    })
+
+    test('a valid query with no results returns an empty array and 200 status', () => {
+        return request(app)
+            .get('/api/articles?topic=paper')
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.articles).toEqual([]);
+            })
+    })
 })
 
 describe('GETS /api/articles/:article_id/comments', () => {
