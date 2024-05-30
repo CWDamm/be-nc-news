@@ -1,8 +1,8 @@
-const express = require('express')
-const app = express()
-const { getEndpoints } = require('./controllers/endpoints-controllers.js')
-const { getTopics } = require('./controllers/topics-controllers.js')
-const { deleteCommentById } = require('./controllers/comments-controllers.js')
+const express = require('express');
+const app = express();
+const { getEndpoints } = require('./controllers/endpoints-controllers.js');
+const { getTopics } = require('./controllers/topics-controllers.js');
+const { deleteCommentById } = require('./controllers/comments-controllers.js');
 const { 
     getArticles,
     getArticleById,
@@ -10,8 +10,7 @@ const {
     getCommentsByArticleId,
     postCommentByArticleId
 } = require('./controllers/articles-controllers.js')
-
-
+const { getUsers } = require('./controllers/users-controllers.js');
 
 app.use(express.json());
 
@@ -28,6 +27,8 @@ app.get('/api/articles/:article_id/comments', getCommentsByArticleId);
 app.post('/api/articles/:article_id/comments', postCommentByArticleId);
 
 app.delete('/api/comments/:comment_id', deleteCommentById);
+
+app.get('/api/users', getUsers);
 
 app.all('*', (req, res) => {
     res.status(404).send({ msg: "Route not found" });

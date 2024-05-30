@@ -6,7 +6,7 @@ const {
     checkArticleIdExists,
     insertCommentByArticleId
 } = require('../models/articles-models')
-const checkUsernameExists = require('../models/users-models')
+const {checkUsernameExists} = require('../models/users-models')
 
 
 function getArticleById(req, res, next) {
@@ -86,7 +86,7 @@ function patchArticleById(req, res, next) {
     Promise.all(promises)
         .then((resolvedPromises) => {
             const updatedArticle = resolvedPromises[0];
-            res.status(201).send( {updatedArticle} )
+            res.status(200).send( {updatedArticle} )
         })
         .catch((err) => {
             next(err);
