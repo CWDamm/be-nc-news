@@ -243,7 +243,7 @@ describe('POSTS /api/articles/:article_id/comments', () => {
     });
 
     test('sends an appropriate status and error message when given an invalid id', () => {
-        
+
         const newComment = {
             username: 'icellusedkars',
             body: 'Uneblievable stuff Geoff!'
@@ -277,10 +277,10 @@ describe('POSTS /api/articles/:article_id/comments', () => {
 
     test('sends an appropriate status and error message when body field is missing', () => {
 
-        const newComment = {username: 'icellusedkars'}
+        const newComment = { username: 'icellusedkars' }
 
         return request(app)
-           .post('/api/articles/9/comments')
+            .post('/api/articles/9/comments')
             .send(newComment)
             .expect(400)
             .then((response) => {
@@ -291,7 +291,7 @@ describe('POSTS /api/articles/:article_id/comments', () => {
 })
 
 describe('PATCH /api/articles/:article_id', () => {
-    test('PATCHES an article with an updated votes property - status 201', () => {
+    test('PATCHES an article with an updated votes property - status 200', () => {
 
         const voteUpdate = { inc_votes: 5 }
 
@@ -309,7 +309,7 @@ describe('PATCH /api/articles/:article_id', () => {
         return request(app)
             .patch('/api/articles/1')
             .send(voteUpdate)
-            .expect(201)
+            .expect(200)
             .then(({ body }) => {
                 expect(body.updatedArticle).toEqual(returnedArticle);
             })
@@ -333,7 +333,7 @@ describe('PATCH /api/articles/:article_id', () => {
         return request(app)
             .patch('/api/articles/1')
             .send(voteUpdate)
-            .expect(201)
+            .expect(200)
             .then(({ body }) => {
                 expect(body.updatedArticle).toEqual(returnedArticle);
             })
@@ -394,33 +394,51 @@ describe('PATCH /api/articles/:article_id', () => {
 
 })
 
-describe("delete a given comment by comment id", () => {
-    test("DELETE /api/comments/:comment_id", () => {
+describe("DELETE /api/comments/:comment_id", () => {
+    test("DELETE:200 deletes a comment with a given id", () => {
         return request(app)
-        .delete("/api/comments/1")
-        .expect(204)
+            .delete("/api/comments/1")
+            .expect(204)
     })
 
     test('DELETE:404 responds with an appropriate status and error message when given a valid but non-existent id', () => {
         return request(app)
-        .delete("/api/comments/999999")
-        .expect(404)
-        .then(response => {
-            expect(response.body.msg).toBe("Comment not found")
-        })
+            .delete("/api/comments/999999")
+            .expect(404)
+            .then(response => {
+                expect(response.body.msg).toBe("Comment not found")
+            })
     })
 
     test('DELETE:400 responds with an appropriate status and error message when given an invalid id', () => {
         return request(app)
-        .delete("/api/comments/not-a-comment")
-          .expect(400)
-          .then(response => {
-            expect(response.body.msg).toBe('Bad request');
-          });
-      });
+            .delete("/api/comments/not-a-comment")
+            .expect(400)
+            .then(response => {
+                expect(response.body.msg).toBe('Bad request');
+            });
+    });
 
 })
 
+describe("GET /api/users", () => {
+    test("GET: 200 serves an array of objects containing all registered users", () => {
+
+        return request(app)
+            .get("/api/users")
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.users.length).toBe(4);
+                body.users.forEach((user) => {
+                    expect(user).toMatchObject({
+                        username: expect.any(String),
+                        name: expect.any(String),
+                        avatar_url: expect.any(String)
+                    })
+                })
+            })
+    })
+})
 
 
 
