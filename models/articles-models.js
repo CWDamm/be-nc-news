@@ -2,12 +2,21 @@ const db = require("../db/connection");
 const format = require("pg-format");
 
 function selectArticleById(id) {
+    
+    let sqlQuery = `SELECT articles.*, 
+    CAST(COALESCE(comment_count_table.comment_count, 0) AS INT) AS comment_count
+    FROM articles
+    LEFT JOIN 
+    (SELECT article_id, COUNT(article_id) AS comment_count 
+    FROM comments
+    GROUP BY article_id) AS comment_count_table
+    ON articles.article_id = comment_count_table.article_id
+    WHERE articles.article_id = $1`
+
     return db
-        .query('SELECT * FROM articles WHERE article_id = $1', [id])
+        .query(sqlQuery, [id])
+        // .query('SELECT * FROM articles WHERE article_id = $1', [id])
         .then(({ rows }) => {
-            if (!rows[0]) {
-                return Promise.reject({ status: 404, msg: "no article found with matching id" })
-            }
             return rows[0];
         })
 }
