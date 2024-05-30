@@ -48,45 +48,6 @@ describe('GET /api/topics', () => {
     })
 })
 
-describe('GET /api/articles/:article_id', () => {
-    test('GETS an array of all articles with article id - status 200', () => {
-        return request(app)
-            .get('/api/articles/1')
-            .expect(200)
-            .then(({ body }) => {
-                expect(body.article).toMatchObject({
-                    author: "butter_bridge",
-                    title: "Living in the shadow of a great man",
-                    article_id: 1,
-                    body: "I find this existence challenging",
-                    topic: "mitch",
-                    created_at: "2020-07-09T20:11:00.000Z",
-                    votes: 100,
-                    article_img_url:
-                        "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700",
-                })
-            })
-    })
-
-    test('sends an appropriate status and error message when given a valid but non-existent id - status 404', () => {
-        return request(app)
-            .get('/api/articles/999999')
-            .expect(404)
-            .then((response) => {
-                expect(response.body.msg).toBe('no article found with matching id');
-            });
-    });
-
-    test('sends an appropriate status and error message when given an invalid id', () => {
-        return request(app)
-            .get('/api/articles/not-an-article')
-            .expect(400)
-            .then((response) => {
-                expect(response.body.msg).toBe('Bad request');
-            });
-    });
-})
-
 describe('GET /api/articles', () => {
     test('GETS an array of all articles - status 200', () => {
         return request(app)
@@ -154,10 +115,10 @@ describe('GET /api/articles', () => {
 
     test('an invalid query returns 404 error and appropriate message', () => {
         return request(app)
-            .get('/api/articles?topic=bananas')
+            .get('/api/articles?topic=mario')
             .expect(404)
             .then(({ body }) => {
-                expect(body.msg).toBe('Topic not found')
+                expect(body.msg).toBe("slug 'mario' not found")
             })
     })
 
@@ -170,6 +131,55 @@ describe('GET /api/articles', () => {
             })
     })
 })
+
+describe('GET /api/articles/:article_id', () => {
+    test('GETS an array of all articles with article id - status 200', () => {
+        return request(app)
+            .get('/api/articles/1')
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.article).toMatchObject({
+                    author: "butter_bridge",
+                    title: "Living in the shadow of a great man",
+                    article_id: 1,
+                    body: "I find this existence challenging",
+                    topic: "mitch",
+                    created_at: "2020-07-09T20:11:00.000Z",
+                    votes: 100,
+                    article_img_url:
+                        "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700",
+                })
+            })
+    })
+
+    test('sends an appropriate status and error message when given a valid but non-existent id - status 404', () => {
+        return request(app)
+            .get('/api/articles/999999')
+            .expect(404)
+            .then((response) => {
+                expect(response.body.msg).toBe("article_id '999999' not found");
+            });
+    });
+
+    test('sends an appropriate status and error message when given an invalid id', () => {
+        return request(app)
+            .get('/api/articles/not-an-article')
+            .expect(400)
+            .then((response) => {
+                expect(response.body.msg).toBe('Bad request');
+            });
+    });
+
+    test('article has correct comment count', () => {
+        return request(app)
+            .get('/api/articles/1')
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.article.comment_count).toBe(11)
+            })
+    })
+})
+
 
 describe('GETS /api/articles/:article_id/comments', () => {
     test('GETS an array of all comments associated with an article id - status 200', () => {
@@ -429,6 +439,12 @@ describe("DELETE /api/comments/:comment_id", () => {
         return request(app)
             .delete("/api/comments/1")
             .expect(204)
+            .then(() => {
+                return db.query("SELECT * FROM comments WHERE comment_id = 1")
+                    .then(({rowCount}) => {
+                        expect(rowCount).toBe(0);
+                    })
+            })
     })
 
     test('DELETE:404 responds with an appropriate status and error message when given a valid but non-existent id', () => {
