@@ -11,9 +11,9 @@ const { checkExists } = require('../utils/check-exists');
 
 function getArticles(req, res, next) {
 
-    const { topic } = req.query;
+    const { topic, sort_by, order } = req.query;
 
-    const promises = [selectArticles(topic)];
+    const promises = [selectArticles(topic, sort_by, order)];
 
     if(topic) {
         promises.push(checkExists("topics", "slug", topic))

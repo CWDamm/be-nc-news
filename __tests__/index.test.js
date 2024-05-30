@@ -80,7 +80,27 @@ describe('GET /api/articles', () => {
             })
     })
 
-    test('articles sorted by date in descending order', () => {
+    test('sorted by any column containing string data, in descending order, when given to sort_by query', () => {
+        return request(app)
+            .get('/api/articles?sort_by=title')
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.articles.length).toBe(13)
+                expect(body.articles).toBeSortedBy('title', { descending: true });
+            })
+    })
+
+    test('sorted by any column containing numeric data, in descending order, when given to sort_by query', () => {
+        return request(app)
+            .get('/api/articles?sort_by=article_id')
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.articles.length).toBe(13)
+                expect(body.articles).toBeSortedBy('article_id', { descending: true });
+            })
+    })
+
+    test('if sort_by not included, articles sorted by date in descending order', () => {
         return request(app)
             .get('/api/articles')
             .expect(200)
@@ -90,7 +110,45 @@ describe('GET /api/articles', () => {
             })
     })
 
-    test('no body property on the articles', () => {
+    test('when given order asc, but no sort_by, sorts by date created in ascending order', () => {
+        return request(app)
+            .get('/api/articles?order=asc')
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.articles.length).toBe(13)
+                expect(body.articles).toBeSortedBy('created_at', { descending: false });
+            })
+    })
+
+    test('when given order asc, and a sort_by, sorts by that variable in ascending order', () => {
+        return request(app)
+            .get('/api/articles?order=asc&sort_by=votes')
+            .expect(200)
+            .then(({ body }) => {
+                expect(body.articles.length).toBe(13)
+                expect(body.articles).toBeSortedBy('votes', { descending: false });
+            })
+    })
+
+    test('when given an invalid order, returns appropriate error msg', () => {
+        return request(app)
+            .get('/api/articles?order=ascending&sort_by=votes')
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe('Bad Request');
+            })
+    })
+
+    test('when given an invalid sort_by, returns appropriate error msg', () => {
+        return request(app)
+            .get('/api/articles?order=asc&sort_by=not-a-variable')
+            .expect(400)
+            .then(({ body }) => {
+                expect(body.msg).toBe('Bad Request');
+            })
+    })
+
+    test('check there is no body property on the articles', () => {
         return request(app)
             .get('/api/articles')
             .expect(200)
@@ -441,7 +499,7 @@ describe("DELETE /api/comments/:comment_id", () => {
             .expect(204)
             .then(() => {
                 return db.query("SELECT * FROM comments WHERE comment_id = 1")
-                    .then(({rowCount}) => {
+                    .then(({ rowCount }) => {
                         expect(rowCount).toBe(0);
                     })
             })
