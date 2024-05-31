@@ -3,10 +3,8 @@ const {
     selectArticleById,
     updateArticleById,
     selectCommentsByArticleId,
-    checkArticleIdExists,
     insertCommentByArticleId
 } = require('../models/articles-models');
-const { checkUsernameExists } = require('../models/users-models');
 const { checkExists } = require('../utils/check-exists');
 
 function getArticles(req, res, next) {
@@ -54,7 +52,7 @@ function getCommentsByArticleId(req, res, next) {
 
     const promises = [
         selectCommentsByArticleId(article_id),
-        checkArticleIdExists(article_id)
+        checkExists("articles", "article_id", article_id)
     ]
 
     Promise.all(promises)
@@ -70,13 +68,14 @@ function getCommentsByArticleId(req, res, next) {
 function postCommentByArticleId(req, res, next) {
 
     const newComment = req.body;
+    const { username } = newComment;
     const { article_id } = req.params;
 
-    checkUsernameExists(newComment.username)
+    checkExists("users", "username", username)
         .then(() => {
-            return checkArticleIdExists(article_id)
+            return checkExists("articles", "article_id", article_id)
         })
-        .then(() => {
+        .then((result) => {
             return insertCommentByArticleId(newComment, article_id)
         })
         .then((result) => {
@@ -95,7 +94,7 @@ function patchArticleById(req, res, next) {
 
     const promises = [
         updateArticleById(article_id, voteChange),
-        checkArticleIdExists(article_id)
+        checkExists("articles", "article_id", article_id)
     ]
 
     Promise.all(promises)

@@ -274,7 +274,7 @@ describe('GETS /api/articles/:article_id/comments', () => {
             .expect(404)
             .then(({ body }) => {
                 const { msg } = body;
-                expect(msg).toBe("no article found with matching id");
+                expect(msg).toBe("article_id '999999' not found");
             })
     })
 
@@ -326,7 +326,7 @@ describe('POSTS /api/articles/:article_id/comments', () => {
 
         const newComment = {
             username: 'icellusedkars',
-            body: 'Uneblievable stuff Geoff!'
+            body: 'Unbelievable stuff Geoff!'
         }
 
         return request(app)
@@ -335,7 +335,7 @@ describe('POSTS /api/articles/:article_id/comments', () => {
             .expect(404)
             .then(({ body }) => {
                 const { msg } = body;
-                expect(msg).toBe("no article found with matching id");
+                expect(msg).toBe("article_id '999999' not found");
             })
     });
 
@@ -368,7 +368,7 @@ describe('POSTS /api/articles/:article_id/comments', () => {
             .expect(404)
             .then(({ body }) => {
                 const { msg } = body;
-                expect(msg).toBe("username not found");
+                expect(msg).toBe("username 'spot_the_dog' not found");
             })
     });
 
@@ -446,7 +446,7 @@ describe('PATCH /api/articles/:article_id', () => {
             .expect(404)
             .then(({ body }) => {
                 const { msg } = body;
-                expect(msg).toBe("no article found with matching id");
+                expect(msg).toBe("article_id '999999' not found");
             })
     });
 
@@ -543,6 +543,29 @@ describe("GET /api/users", () => {
     })
 })
 
+describe('GET /api/users/:username', () => {
+    test('GET: 200 serves a user object matching the given username', () => {
+        return request(app)
+            .get('/api/users/icellusedkars')
+            .expect(200)
+            .then(({ body }) => {
+                console.log(body);
+                expect(body.user).toMatchObject({
+                    username: 'icellusedkars',
+                    name: 'sam',
+                    avatar_url: 'https://avatars2.githubusercontent.com/u/24604688?s=460&v=4'
+                })
+            })
+    })
 
+    test('ERROR: 404 sends an appropriate status and error message when given a valid but non-existent username', () => {
+        return request(app)
+            .get('/api/users/spot_the_dog')
+            .expect(404)
+            .then(({body}) => {
+                expect(body.msg).toBe("username 'spot_the_dog' not found");
+            });
+    });
+})
 
 
