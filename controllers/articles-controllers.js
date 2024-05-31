@@ -3,7 +3,8 @@ const {
     selectArticleById,
     updateArticleById,
     selectCommentsByArticleId,
-    insertCommentByArticleId
+    insertCommentByArticleId,
+    insertArticle
 } = require('../models/articles-models');
 const { checkExists } = require('../utils/check-exists');
 
@@ -13,11 +14,11 @@ function getArticles(req, res, next) {
 
     const promises = [selectArticles(topic, sort_by, order)];
 
-    if(topic) {
+    if (topic) {
         promises.push(checkExists("topics", "slug", topic))
     }
 
-    Promise.all(promises)  
+    Promise.all(promises)
         .then((resolvedPromises) => {
             const articles = resolvedPromises[0];
             res.status(200).send({ articles })
@@ -36,7 +37,7 @@ function getArticleById(req, res, next) {
         checkExists("articles", "article_id", article_id)
     ]
 
-    Promise.all(promises)  
+    Promise.all(promises)
         .then((resolvedPromises) => {
             const article = resolvedPromises[0];
             res.status(200).send({ article })
@@ -87,6 +88,24 @@ function postCommentByArticleId(req, res, next) {
         })
 }
 
+function postArticles(req, res, next) {
+    const newArticle = req.body;
+
+    checkExists("users", "username", newArticle.author)
+        .then(() => {
+            return checkExists("topics", "slug", newArticle.topic)
+        })
+        .then(() => {
+            return insertArticle(newArticle)
+        })
+        .then((newArticle) => {
+            res.status(201).send({ newArticle })
+        })
+        .catch(err => {
+            next(err)
+        })
+}
+
 function patchArticleById(req, res, next) {
 
     const { article_id } = req.params;
@@ -109,6 +128,7 @@ function patchArticleById(req, res, next) {
 
 module.exports = {
     getArticles,
+    postArticles,
     getArticleById,
     patchArticleById,
     getCommentsByArticleId,

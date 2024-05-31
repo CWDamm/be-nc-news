@@ -2,20 +2,19 @@ const db = require("../db/connection");
 const format = require("pg-format");
 
 function selectArticleById(id) {
-    
+
     let sqlQuery = `SELECT articles.*, 
-    CAST(COALESCE(comment_count_table.comment_count, 0) AS INT) AS comment_count
-    FROM articles
-    LEFT JOIN 
-    (SELECT article_id, COUNT(article_id) AS comment_count 
-    FROM comments
-    GROUP BY article_id) AS comment_count_table
-    ON articles.article_id = comment_count_table.article_id
-    WHERE articles.article_id = $1`
+        CAST(COALESCE(comment_count_table.comment_count, 0) AS INT) AS comment_count
+        FROM articles
+        LEFT JOIN 
+        (SELECT article_id, COUNT(article_id) AS comment_count 
+        FROM comments
+        GROUP BY article_id) AS comment_count_table
+        ON articles.article_id = comment_count_table.article_id
+        WHERE articles.article_id = $1`
 
     return db
         .query(sqlQuery, [id])
-        // .query('SELECT * FROM articles WHERE article_id = $1', [id])
         .then(({ rows }) => {
             return rows[0];
         })
@@ -26,20 +25,20 @@ function selectArticles(topic, sort_by, order) {
     const validSortVariables = [
         'author',
         'title',
-        'article_id', 
-        'topic', 
-        "created_at", 
-        "votes", 
+        'article_id',
+        'topic',
+        "created_at",
+        "votes",
         "article_img_url"
     ];
     const validOrderVariables = ["asc", "desc"];
 
     if (sort_by && !validSortVariables.includes(sort_by)) {
-        return Promise.reject({'status': 400, msg: 'Bad Request' });
+        return Promise.reject({ 'status': 400, msg: 'Bad Request' });
     }
 
     if (order && !validOrderVariables.includes(order)) {
-        return Promise.reject({'status': 400, msg: 'Bad Request' });
+        return Promise.reject({ 'status': 400, msg: 'Bad Request' });
     }
 
     let sqlQuery = `SELECT articles.author, articles.title, articles.article_id, articles.topic, 
@@ -54,18 +53,18 @@ function selectArticles(topic, sort_by, order) {
 
     let inputValues = []
 
-    if(topic) {
+    if (topic) {
         sqlQuery += ` WHERE topic = $1`
         inputValues.push(topic);
     }
 
-    if(sort_by) {
-        sqlQuery += ` ORDER BY ${ sort_by }`
+    if (sort_by) {
+        sqlQuery += ` ORDER BY ${sort_by}`
     } else {
         sqlQuery += ` ORDER BY created_at`
     }
 
-    if(order) {
+    if (order) {
         sqlQuery += ` ${order}`
     } else {
         sqlQuery += ` DESC`
@@ -93,12 +92,6 @@ function insertCommentByArticleId(newComment, article_id) {
     const author = newComment.username;
     const inputValues = [author, body, article_id];
 
-    if (!body) {
-        return Promise.reject({ status: 400, msg: "missing field - body" })
-    } else if (!author) {
-        return Promise.reject({ status: 400, msg: "missing field - username" })
-    }
-
     const formattedSqlQuery = format(
         `INSERT INTO comments 
         (author, body, article_id)
@@ -114,10 +107,6 @@ function insertCommentByArticleId(newComment, article_id) {
 
 function updateArticleById(article_id, voteChange) {
 
-    if (!voteChange && voteChange !== 0) {
-        return Promise.reject({ status: 400, msg: "no vote increment provided" })
-    }
-
     const sqlQuery = `
     UPDATE articles 
     SET votes = votes + $2
@@ -126,13 +115,37 @@ function updateArticleById(article_id, voteChange) {
 
     return db
         .query(sqlQuery, [article_id, voteChange])
-        .then(({ rows }) => {
-            return rows[0];
+        .then(({ rows: [updatedArticle] }) => {
+            return updatedArticle;
+        })
+}
+
+function insertArticle(newArticle) {
+    const { author, title, body, topic, article_img_url } = newArticle;
+    const inputValues = [author, title, body, topic]
+    let colnames = "author, title, body, topic";
+
+    if(article_img_url) {
+        inputValues.push(article_img_url);
+        colnames += ", article_img_url"
+    }
+
+    const formattedSqlQuery = format(
+        `INSERT INTO articles 
+        (${colnames})
+        VALUES (%L) RETURNING *;`
+        , inputValues);
+
+    return db
+        .query(formattedSqlQuery)
+        .then(({ rows: [article] }) => {
+            return selectArticleById(article["article_id"]);
         })
 }
 
 module.exports = {
     selectArticles,
+    insertArticle,
     selectArticleById,
     updateArticleById,
     selectCommentsByArticleId,

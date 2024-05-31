@@ -381,7 +381,7 @@ describe('POSTS /api/articles/:article_id/comments', () => {
             .send(newComment)
             .expect(400)
             .then((response) => {
-                expect(response.body.msg).toBe("missing field - body");
+                expect(response.body.msg).toBe("Bad request");
             });
     });
 
@@ -472,7 +472,7 @@ describe('PATCH /api/articles/:article_id', () => {
             .send(voteUpdate)
             .expect(400)
             .then((response) => {
-                expect(response.body.msg).toBe("no vote increment provided");
+                expect(response.body.msg).toBe("Bad request");
             });
     });
 
@@ -561,14 +561,14 @@ describe('GET /api/users/:username', () => {
         return request(app)
             .get('/api/users/spot_the_dog')
             .expect(404)
-            .then(({body}) => {
+            .then(({ body }) => {
                 expect(body.msg).toBe("username 'spot_the_dog' not found");
             });
     });
 })
 
 describe('PATCH /api/comments/:comment_id', () => {
-    test('PATCHES: 200 a comment with an updated votes property', () => {
+    test('PATCHES 200: updates a comment with an updated votes property', () => {
 
         const voteUpdate = { inc_votes: 5 }
 
@@ -581,12 +581,12 @@ describe('PATCH /api/comments/:comment_id', () => {
             .patch('/api/comments/1')
             .send(voteUpdate)
             .expect(200)
-            .then(({ body: {updatedComment} }) => {
+            .then(({ body: { updatedComment } }) => {
                 expect(updatedComment).toMatchObject(returnedComment);
             })
     })
 
-    test('PATCHES: 200 a comment with an negative updated votes property', () => {
+    test('PATCHES 200: updates a comment with an negative votes change', () => {
 
         const voteUpdate = { inc_votes: -5 }
 
@@ -599,7 +599,7 @@ describe('PATCH /api/comments/:comment_id', () => {
             .patch('/api/comments/1')
             .send(voteUpdate)
             .expect(200)
-            .then(({ body: {updatedComment} }) => {
+            .then(({ body: { updatedComment } }) => {
                 expect(updatedComment).toMatchObject(returnedComment);
             })
     })
@@ -656,8 +656,129 @@ describe('PATCH /api/comments/:comment_id', () => {
             .patch('/api/comments/1')
             .send(voteUpdate)
             .expect(400)
-            .then(({ body: { msg }}) => {
+            .then(({ body: { msg } }) => {
                 expect(msg).toBe('Bad request');
             });
     });
+})
+
+describe('POST /api/articles', () => {
+    test('POST 201: creates a new article', () => {
+
+        const newArticle = {
+            author: "butter_bridge",
+            title: "Cat found after vanishing for 11 years",
+            body: "A cat has been found after going missing from his home in Coventry 11 years ago",
+            topic: "cats",
+            article_img_url:
+                "https://ichef.bbci.co.uk/news/976/cpsprodpb/1588/live/348f4ef0-19ca-11ef-a3f4-f1cabba3030d.png.webp"
+        }
+
+        const returnedArticle = {
+            ...newArticle,
+            article_id: 14,
+            created_at: expect.any(String),
+            votes: 0,
+            comment_count: 0
+        }
+
+        return request(app)
+            .post('/api/articles')
+            .send(newArticle)
+            .expect(201)
+            .then(({ body: {newArticle} }) => {
+                expect(newArticle).toMatchObject(returnedArticle)
+            })
+    })
+
+    test('POST 201: default url working when none provided', () => {
+
+        const newArticle = {
+            author: "butter_bridge",
+            title: "Cat found after vanishing for 11 years",
+            body: "A cat has been found after going missing from his home in Coventry 11 years ago",
+            topic: "cats"
+        }
+
+        const defaultUrl = "https://images.pexels.com/photos/97050/pexels-photo-97050.jpeg?w=700&h=700"
+
+        return request(app)
+            .post('/api/articles')
+            .send(newArticle)
+            .expect(201)
+            .then(({ body: {newArticle} }) => {
+                expect(newArticle.article_img_url).toBe(defaultUrl)
+            })
+    })
+
+    test('ERROR 400: malformed body missing mandatory variable (no author)', () => {
+        
+        const newArticle = {
+            title: "Cat found after vanishing for 11 years",
+            body: "A cat has been found after going missing from his home in Coventry 11 years ago",
+            topic: "cats"
+        }
+
+        return request(app)
+            .post('/api/articles')
+            .send(newArticle)
+            .expect(400)
+            .then(({ body: { msg } }) => {
+                expect(msg).toBe("Bad request")
+            })
+    })
+
+    test('ERROR 400: failing schema validation, null body', () => {
+        
+        const newArticle = {
+            author: "butter_bridge",
+            title: "Cat found after vanishing for 11 years",
+            body: null,
+            topic: "cats"
+        }
+
+        return request(app)
+            .post('/api/articles')
+            .send(newArticle)
+            .expect(400)
+            .then(({ body: { msg } }) => {
+                expect(msg).toBe("Bad request")
+            })
+    })
+
+    test('ERROR 404: topic does not exist', () => {
+        
+        const newArticle = {
+            author: "butter_bridge",
+            title: "Cat found after vanishing for 11 years",
+            body: "A cat has been found after going missing from his home in Coventry 11 years ago",
+            topic: "penguins"
+        }
+
+        return request(app)
+            .post('/api/articles')
+            .send(newArticle)
+            .expect(404)
+            .then(({ body: { msg } }) => {
+                expect(msg).toBe("slug 'penguins' not found")
+            })
+    })
+
+    test('ERROR 404: author does not exist', () => {
+        
+        const newArticle = {
+            author: "spot_the_dog",
+            title: "Cat found after vanishing for 11 years",
+            body: "A cat has been found after going missing from his home in Coventry 11 years ago",
+            topic: "mitch"
+        }
+
+        return request(app)
+            .post('/api/articles')
+            .send(newArticle)
+            .expect(404)
+            .then(({ body: { msg } }) => {
+                expect(msg).toBe("username 'spot_the_dog' not found")
+            })
+    })
 })
