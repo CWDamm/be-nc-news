@@ -25,7 +25,6 @@ describe('/api', () => {
             .get('/api')
             .expect(200)
             .then(({ body }) => {
-                const endpointsCount = Object.keys(endpoints).length;
                 expect(body.endpoints).toEqual(endpoints);
             })
     })

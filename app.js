@@ -1,58 +1,28 @@
 const express = require('express');
 const app = express();
-const { getEndpoints } = require('./controllers/endpoints-controllers.js');
-const { getTopics } = require('./controllers/topics-controllers.js');
-const { deleteCommentById } = require('./controllers/comments-controllers.js');
-const { 
-    getArticles,
-    getArticleById,
-    patchArticleById,
-    getCommentsByArticleId,
-    postCommentByArticleId
-} = require('./controllers/articles-controllers.js')
-const { getUsers } = require('./controllers/users-controllers.js');
+
+const apiRouter = require('./routers/api-router.js');
+const articleRouter = require('./routers/articles-router.js');
+const topicsRouter = require('./routers/topics-router.js');
+const commentsRouter = require('./routers/comments-router.js');
+const usersRouter = require('./routers/users-router.js');
+
+const { handlePSQLErros } = require('./error-handlers/psql-errors.js')
+const { handleCustomErrors } = require('./error-handlers/custom-errors.js')
+const { handleInternalServerErrors } = require('./error-handlers/internal-server-errors.js')
+const { handleRouteNotFoundErrors } = require('./error-handlers/route-not-found-errors.js')
 
 app.use(express.json());
 
-app.get(`/api`, getEndpoints);
+app.use('/api', apiRouter);
+app.use('/api/articles', articleRouter);
+app.use('/api/topics', topicsRouter);
+app.use('/api/comments', commentsRouter);
+app.use('/api/users', usersRouter);
 
-app.get(`/api/topics`, getTopics);
-
-app.get(`/api/articles`, getArticles);
-
-app.get(`/api/articles/:article_id`, getArticleById);
-app.patch('/api/articles/:article_id', patchArticleById);
-
-app.get('/api/articles/:article_id/comments', getCommentsByArticleId);
-app.post('/api/articles/:article_id/comments', postCommentByArticleId);
-
-app.delete('/api/comments/:comment_id', deleteCommentById);
-
-app.get('/api/users', getUsers);
-
-app.all('*', (req, res) => {
-    res.status(404).send({ msg: "Route not found" });
-})
-
-app.use((err, req, res, next) => {
-    // console.log(err);
-    if (["22P02"].includes(err.code)) {
-        res.status(400).send({ msg: "Bad request" });
-    } else {
-        next(err)
-    }
-})
-
-app.use((err, req, res, next) => {
-    if (err.msg) {
-        res.status(err.status).send({ msg: err.msg });
-    } else {
-        next(err);
-    }
-})
-
-app.use((err, req, res, next) => {
-    res.status(500).send({ msg: 'Internal Server Error' })
-})
+app.all('*', handleRouteNotFoundErrors)
+app.use(handlePSQLErros);
+app.use(handleCustomErrors);
+app.use(handleInternalServerErrors);
 
 module.exports = app; 
