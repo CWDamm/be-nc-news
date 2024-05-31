@@ -549,7 +549,6 @@ describe('GET /api/users/:username', () => {
             .get('/api/users/icellusedkars')
             .expect(200)
             .then(({ body }) => {
-                console.log(body);
                 expect(body.user).toMatchObject({
                     username: 'icellusedkars',
                     name: 'sam',
@@ -568,4 +567,97 @@ describe('GET /api/users/:username', () => {
     });
 })
 
+describe('PATCH /api/comments/:comment_id', () => {
+    test('PATCHES: 200 a comment with an updated votes property', () => {
 
+        const voteUpdate = { inc_votes: 5 }
+
+        const returnedComment = {
+            comment_id: 1,
+            votes: 21,
+        }
+
+        return request(app)
+            .patch('/api/comments/1')
+            .send(voteUpdate)
+            .expect(200)
+            .then(({ body: {updatedComment} }) => {
+                expect(updatedComment).toMatchObject(returnedComment);
+            })
+    })
+
+    test('PATCHES: 200 a comment with an negative updated votes property', () => {
+
+        const voteUpdate = { inc_votes: -5 }
+
+        const returnedComment = {
+            comment_id: 1,
+            votes: 11,
+        }
+
+        return request(app)
+            .patch('/api/comments/1')
+            .send(voteUpdate)
+            .expect(200)
+            .then(({ body: {updatedComment} }) => {
+                expect(updatedComment).toMatchObject(returnedComment);
+            })
+    })
+
+    test('ERROR 404: returns an appropriate error message if comment id is valid but does not exist', () => {
+
+        const voteUpdate = { inc_votes: -5 }
+
+        const returnedComment = {
+            comment_id: 1,
+            votes: 11,
+        }
+
+        return request(app)
+            .patch('/api/comments/999999')
+            .send(voteUpdate)
+            .expect(404)
+            .then(({ body: { msg } }) => {
+                expect(msg).toBe("comment_id '999999' not found");
+            })
+    })
+
+    test('ERROR 400: sends an appropriate status and error message when given an invalid comment id', () => {
+
+        const voteUpdate = { inc_votes: 5 }
+
+        return request(app)
+            .patch('/api/comments/not-an-id')
+            .send(voteUpdate)
+            .expect(400)
+            .then(({ body: { msg } }) => {
+                expect(msg).toBe('Bad request');
+            });
+    });
+
+    test('ERROR 400: sends an appropriate status and error message when given a malformed body (no increment)', () => {
+
+        const voteUpdate = {}
+
+        return request(app)
+            .patch('/api/comments/1')
+            .send(voteUpdate)
+            .expect(400)
+            .then((response) => {
+                expect(response.body.msg).toBe("no vote increment provided");
+            });
+    });
+
+    test('ERROR 400: sends an appropriate status and error message when given an invalid vote change', () => {
+
+        const voteUpdate = { inc_votes: "not-an-increment" }
+
+        return request(app)
+            .patch('/api/comments/1')
+            .send(voteUpdate)
+            .expect(400)
+            .then(({ body: { msg }}) => {
+                expect(msg).toBe('Bad request');
+            });
+    });
+})
